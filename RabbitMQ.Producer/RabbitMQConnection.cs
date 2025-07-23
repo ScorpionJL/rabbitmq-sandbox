@@ -4,7 +4,7 @@ using RabbitMQ.Client.Events;
 namespace Zrs.RabbitMQ.Producer;
 internal sealed class RabbitMQConnection : IDisposable
 {
-    private static readonly SemaphoreSlim semaphore = new(1, 1);
+    private static readonly SemaphoreSlim _semaphore = new(1, 1);
     private IConnection? _connection;
     private IChannel? _channel;
 
@@ -12,7 +12,7 @@ internal sealed class RabbitMQConnection : IDisposable
     {
         //_logger.LogInformation("RabbitMQ Client is trying to connect");
 
-        await semaphore.WaitAsync();
+        await _semaphore.WaitAsync();
         try
         {
             var factory = new ConnectionFactory();
@@ -34,7 +34,7 @@ internal sealed class RabbitMQConnection : IDisposable
                 return false;
             }
         }
-        finally { semaphore.Release(); }
+        finally { _semaphore.Release(); }
 
     }
 

@@ -1,7 +1,7 @@
 ﻿// Consumer
 using Zrs.RabbitMQ.Shared;
 
-using var messageBus = await SandboxMessageBus.CreateConsumerAsync(message =>
+using var messageBus = await SandboxMessageBus.CreateConsumer(message =>
 {
     Console.WriteLine($"Received message: {message}");
     return Task.CompletedTask;
