@@ -30,9 +30,7 @@ public sealed class RabbitConsumer<T> : IDisposable, IAsyncDisposable
 
 
     public Task StartConsumer(CancellationToken cancellationToken = default) =>
-        _consumer == null
-        ? throw new InvalidOperationException("Consumer not initialized. Use CreateConsumerAsync with a message handler.")
-        : _channel.BasicConsumeAsync(_queueName, autoAck: false, _routingKey, _consumer, cancellationToken);
+        _channel.BasicConsumeAsync(_queueName, autoAck: false, _routingKey, _consumer, cancellationToken);
  
 
     public Task StopConsumer(bool noWait, CancellationToken cancellationToken = default) => 
