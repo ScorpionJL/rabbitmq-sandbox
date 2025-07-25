@@ -11,6 +11,6 @@ public class MessageHandler : IMessageHandler<MessageBase>
     {
         // Implement the logic to handle the message here
         // For example, you could log the message or process it in some way
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 }
