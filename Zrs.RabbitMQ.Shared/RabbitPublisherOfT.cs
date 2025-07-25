@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using RabbitMQ.Client;
+﻿using RabbitMQ.Client;
 
 namespace Zrs.RabbitMQ.Shared;
 
