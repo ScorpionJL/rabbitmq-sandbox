@@ -3,34 +3,30 @@ using RabbitMQ.Client.Events;
 
 namespace Zrs.RabbitMQ.Shared;
 
-public sealed class RabbitService
+public sealed class RabbitConnection : IDisposable, IAsyncDisposable
 {
     private static readonly SemaphoreSlim _semaphore = new(1, 1);
     private readonly ConnectionFactory _connectionFactory;
     private IConnection? _connection;
-    private IChannel? _channel;
 
 
-    public RabbitService() : this(new ConnectionFactory()) { }
+    public RabbitConnection(ConnectionFactory? connectionFactory = null) => 
+        _connectionFactory = connectionFactory ?? new ConnectionFactory();
 
-    public RabbitService(ConnectionFactory connectionFactory)
+
+    // factory methods
+    public static async Task<RabbitConnection> CreateAsync(
+        ConnectionFactory? connectionFactory = null,
+        CancellationToken cancellationToken = default)
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
+        var rabbitConnection = new RabbitConnection(connectionFactory ?? new ConnectionFactory());
+        if (await rabbitConnection.TryConnect(cancellationToken)) { return rabbitConnection; }
+        throw new InvalidOperationException("Could not connect to RabbitMQ server.");
     }
-
-
-    // properties
-    public IChannel Channel => _channel ?? throw new InvalidOperationException("Channel is not established.");
 
 
     // connection management
-    public bool IsConnected => (_connection?.IsOpen ?? false) && (_channel?.IsOpen ?? false) && !_disposed;
-
-    public async Task EnsureConnected(CancellationToken cancellationToken = default)
-    {
-        if (await TryConnect(cancellationToken)) { return; }
-        throw new InvalidOperationException("Could not connect to RabbitMQ server.");
-    }
+    public bool IsConnected => (_connection?.IsOpen ?? false) && !_disposed;
 
     public async ValueTask<bool> TryConnect(CancellationToken cancellationToken = default)
     {
@@ -43,8 +39,6 @@ public sealed class RabbitService
             if (IsConnected) { return true; }
 
             _connection = await _connectionFactory.CreateConnectionAsync(cancellationToken: cancellationToken);
-            _channel = await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
-
             _connection.ConnectionShutdownAsync += OnConnectionShutdown;
             _connection.CallbackExceptionAsync += OnCallbackException;
             _connection.ConnectionBlockedAsync += OnConnectionBlocked;
@@ -56,28 +50,10 @@ public sealed class RabbitService
 
 
     // topology
-    public async Task SetupExchangeAsync(ExchangeOptions exchangeOptions, CancellationToken cancellationToken = default)
+    public async Task<IChannel> CreateChannel(CancellationToken cancellationToken = default)
     {
-        if (!IsConnected) { throw new InvalidOperationException("Channel is not established."); }
-        await Channel.ExchangeDeclareAsync(
-            exchangeOptions.ExchangeName,
-            exchangeOptions.ExchangeType,
-            durable: true, autoDelete: false, arguments: null,
-            cancellationToken: cancellationToken);
-    }
-
-    public async Task SetupQueueAsync(QueueOptions queueOptions, CancellationToken cancellationToken = default)
-    {
-        if (!IsConnected) { throw new InvalidOperationException("Channel is not established."); }
-        await Channel.QueueDeclareAsync(
-            queueOptions.QueueName,
-            durable: true, exclusive: false, autoDelete: false, arguments: null,
-            cancellationToken: cancellationToken);
-        await Channel.QueueBindAsync(
-            queueOptions.QueueName,
-            queueOptions.ExchangeName,
-            queueOptions.RoutingKey ?? string.Empty,
-            cancellationToken: cancellationToken);
+        if (!IsConnected) { throw new InvalidOperationException("Connection to RabbitMQ server is not established."); }
+        return await _connection!.CreateChannelAsync(cancellationToken: cancellationToken);
     }
 
 
@@ -126,9 +102,6 @@ public sealed class RabbitService
 
         if (disposing)
         {
-            _channel?.Dispose();
-            _channel = null;
-
             _connection?.Dispose();
             _connection = null;
         }
@@ -139,13 +112,6 @@ public sealed class RabbitService
     private async ValueTask DisposeAsyncCore()
     {
         if (_disposed) return;
-
-        if (_channel is not null)
-        {
-            await _channel.CloseAsync().ConfigureAwait(false);
-            await _channel.DisposeAsync().ConfigureAwait(false);
-            _channel = null;
-        }
 
         if (_connection is not null)
         {

@@ -3,47 +3,66 @@ using Zrs.RabbitMQ.Shared.Extensions;
 
 namespace Zrs.RabbitMQ.Shared;
 
-public class RabbitPublisher<TMessage> where TMessage : MessageBase
+public sealed class RabbitPublisher : IDisposable, IAsyncDisposable
 {
-    private readonly RabbitService _rabbitClient;
+    private readonly IChannel _channel;
 
-    public RabbitPublisher() : this(new ConnectionFactory()) { }
-    public RabbitPublisher(ConnectionFactory connectionFactory)
-    {
-        _rabbitClient = new RabbitService(connectionFactory);
-    }
+    internal RabbitPublisher(IChannel channel) => 
+        _channel = channel ?? throw new ArgumentNullException(nameof(channel));
 
-
-    public async ValueTask<bool> TryConnect(CancellationToken cancellationToken = default) => await _rabbitClient.TryConnect(cancellationToken);
-
-
-    // publish messages
     private static readonly BasicProperties DefaultBasicProperties = new()
     {
         ContentType = "application/json",
         DeliveryMode = DeliveryModes.Persistent,
     };
 
-    protected async Task PublishMessage(
-        TMessage message,
+    public async Task PublishAsync<T>(
+        T message,
         string exchangeName,
-        string? routingKey = null,
+        string routingKey = "",
         BasicProperties? basicProperties = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(message);
         ArgumentException.ThrowIfNullOrWhiteSpace(exchangeName, nameof(exchangeName));
 
-        await _rabbitClient.EnsureConnected(cancellationToken);
-
-        await _rabbitClient.Channel.BasicPublishAsync(
+        await _channel.BasicPublishAsync(
             exchangeName,
-            routingKey ?? string.Empty,
+            routingKey,
             mandatory: true,
             basicProperties ?? DefaultBasicProperties,
             body: message.JsonSerialize().ToUTF8Bytes(),
             cancellationToken);
     }
-    protected Task PublishMessage(TMessage message, string exchangeName, CancellationToken cancellationToken = default) =>
-        PublishMessage(message, exchangeName, cancellationToken: cancellationToken);
+
+
+    #region // IDisposable and IAsyncDisposable implementation //
+    private bool _disposed;
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _channel.Dispose();
+        _disposed = true;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_disposed) return;
+        await _channel.CloseAsync().ConfigureAwait(false);
+        await _channel.DisposeAsync().ConfigureAwait(false);
+        _disposed = true;
+    }
+    #endregion
+}
+
+public static partial class RabbitConnectionExtensions
+{
+    public static async Task<RabbitPublisher> CreatePublisher(
+        this RabbitConnection connection,
+        CancellationToken cancellationToken = default)
+    {
+        var channel = await connection.CreateChannel(cancellationToken);
+        return new RabbitPublisher(channel);
+    }
 }
