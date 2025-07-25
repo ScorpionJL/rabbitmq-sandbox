@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Contracts\**" />
+    <EmbeddedResource Remove="Contracts\**" />
+    <None Remove="Contracts\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="RabbitMQ.Client" Version="7.1.2" />
   </ItemGroup>
 
