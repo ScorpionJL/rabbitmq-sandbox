@@ -1,18 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="RabbitMQ.Client" Version="7.1.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Zrs.RabbitMQ.Contracts\Zrs.RabbitMQ.Contracts.csproj" />
     <ProjectReference Include="..\Zrs.RabbitMQ.Shared\Zrs.RabbitMQ.Shared.csproj" />
   </ItemGroup>
 
