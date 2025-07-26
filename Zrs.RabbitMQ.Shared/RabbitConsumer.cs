@@ -14,7 +14,7 @@ public sealed class RabbitConsumer<T> : IDisposable, IAsyncDisposable
     private readonly string _routingKey;
 
 
-    internal RabbitConsumer(IChannel channel, Func<T, Task> messageHandler, string queueName, string routingKey = "")
+    internal RabbitConsumer(IChannel channel, RabbitMessageHandler<T> messageHandler, string queueName, string routingKey = "")
     {
         _channel = channel ?? throw new ArgumentNullException(nameof(channel));
 
@@ -72,7 +72,7 @@ public static partial class RabbitConnectionExtensions
 
     public static async Task<RabbitConsumer<T>> CreateConsumer<T>(
         this RabbitConnection connection,
-        Func<T, Task> messageHandler,
+        RabbitMessageHandler<T> messageHandler,
         string queueName,
         string routingKey = "",
         CancellationToken cancellationToken = default)
@@ -83,7 +83,7 @@ public static partial class RabbitConnectionExtensions
 
     public static Task<RabbitConsumer<string>> CreateStringConsumer(
         this RabbitConnection connection,
-        Func<string, Task> messageHandler,
+        RabbitMessageHandler<string> messageHandler,
         string queueName,
         string routingKey = "",
         CancellationToken cancellationToken = default) =>

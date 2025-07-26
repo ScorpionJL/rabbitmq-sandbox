@@ -27,7 +27,7 @@ public static class SandboxMessageBus
 
     public static async Task<RabbitConsumer<SandboxMessage>> CreateConsumer(
         RabbitConnection connection,
-        Func<SandboxMessage, Task> messageHandler,
+        RabbitMessageHandler<SandboxMessage> messageHandler,
         string routingKey = "",
         CancellationToken cancellationToken = default)
     {
