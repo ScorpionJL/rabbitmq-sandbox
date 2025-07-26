@@ -9,5 +9,6 @@ internal static class FunctionalExtensions
     public static string ToUTF8String(this byte[] bytes) => Encoding.UTF8.GetString(bytes);
 
     public static string JsonSerialize<T>(this T obj, JsonSerializerOptions? options = null) => JsonSerializer.Serialize(obj, options);
-    public static T? JsonDeserialize<T>(this string json, JsonSerializerOptions? options = null) => JsonSerializer.Deserialize<T>(json, options);
+     public static T? JsonDeserialize<T>(this string json, JsonSerializerOptions? options = null) => JsonSerializer.Deserialize<T>(json, options);
+    public static T? JsonDeserialize<T>(this ReadOnlyMemory<byte> bytes, JsonSerializerOptions? options = null) => JsonSerializer.Deserialize<T>(bytes.Span, options);
 }

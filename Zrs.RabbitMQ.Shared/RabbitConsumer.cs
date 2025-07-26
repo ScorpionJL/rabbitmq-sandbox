@@ -1,6 +1,8 @@
-﻿using System.Text.Json;
+﻿using System.Text;
+using System.Text.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using Zrs.RabbitMQ.Shared.Extensions;
 
 namespace Zrs.RabbitMQ.Shared;
 
@@ -19,7 +21,7 @@ public sealed class RabbitConsumer<T> : IDisposable, IAsyncDisposable
         _consumer = new AsyncEventingBasicConsumer(_channel);
         _consumer.ReceivedAsync += async (sender, e) =>
         {
-            var message = JsonSerializer.Deserialize<T>(e.Body.Span);
+            var message = e.DeserializeBody<T>();
             if (message != null) { await messageHandler(message); }
             await _channel.BasicAckAsync(e.DeliveryTag, multiple: false);
         };
@@ -31,9 +33,9 @@ public sealed class RabbitConsumer<T> : IDisposable, IAsyncDisposable
 
     public Task StartConsumer(CancellationToken cancellationToken = default) =>
         _channel.BasicConsumeAsync(_queueName, autoAck: false, _routingKey, _consumer, cancellationToken);
- 
 
-    public Task StopConsumer(bool noWait, CancellationToken cancellationToken = default) => 
+
+    public Task StopConsumer(bool noWait, CancellationToken cancellationToken = default) =>
         _channel.BasicCancelAsync(_queueName, noWait, cancellationToken);
     public Task StopConsumer(CancellationToken cancellationToken = default) => StopConsumer(false, cancellationToken);
 
@@ -58,8 +60,16 @@ public sealed class RabbitConsumer<T> : IDisposable, IAsyncDisposable
     #endregion
 }
 
+file static class PrivateExtensions
+{
+    public static T? DeserializeBody<T>(this BasicDeliverEventArgs e, JsonSerializerOptions? options = null) => 
+        e.Body.IsEmpty ? default : 
+        e.Body.JsonDeserialize<T>(options);
+}
+
 public static partial class RabbitConnectionExtensions
 {
+
     public static async Task<RabbitConsumer<T>> CreateConsumer<T>(
         this RabbitConnection connection,
         Func<T, Task> messageHandler,
@@ -76,6 +86,6 @@ public static partial class RabbitConnectionExtensions
         Func<string, Task> messageHandler,
         string queueName,
         string routingKey = "",
-        CancellationToken cancellationToken = default) => 
+        CancellationToken cancellationToken = default) =>
         connection.CreateConsumer(messageHandler, queueName, routingKey, cancellationToken);
 }

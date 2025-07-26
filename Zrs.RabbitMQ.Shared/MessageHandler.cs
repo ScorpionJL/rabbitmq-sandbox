@@ -1,16 +1,20 @@
 ﻿namespace Zrs.RabbitMQ.Shared;
 
-public interface IMessageHandler<T> where T : MessageBase
-{
-    Task HandleMessage(T message);
-}
+delegate Task RabbitMessageHandler<T>(T message);
 
-public class MessageHandler : IMessageHandler<MessageBase>
+public static class RabbitMessageHandlers
 {
-    public Task HandleMessage(MessageBase message)
+    /// <summary>
+    /// A no-op message handler that does nothing.
+    /// </summary>
+    public static Task NoOp<T>(T message) => Task.CompletedTask;
+
+    /// <summary>
+    /// A message handler that writes the message to the console.
+    /// </summary>
+    public static Task ConsoleOutput<T>(T message)
     {
-        // Implement the logic to handle the message here
-        // For example, you could log the message or process it in some way
+        Console.WriteLine(message?.ToString());
         return Task.CompletedTask;
     }
 }

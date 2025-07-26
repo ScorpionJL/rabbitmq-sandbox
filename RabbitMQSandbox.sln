@@ -14,6 +14,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zrs.RabbitMQ.Contracts", "Zrs.RabbitMQ.Contracts\Zrs.RabbitMQ.Contracts.csproj", "{3BE0EA1D-968E-408C-B4F4-FE96A34E7CB4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +34,10 @@ Global
 		{673A5C13-D6F6-4F0C-ABDF-A4BF509A374C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{673A5C13-D6F6-4F0C-ABDF-A4BF509A374C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{673A5C13-D6F6-4F0C-ABDF-A4BF509A374C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3BE0EA1D-968E-408C-B4F4-FE96A34E7CB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3BE0EA1D-968E-408C-B4F4-FE96A34E7CB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3BE0EA1D-968E-408C-B4F4-FE96A34E7CB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3BE0EA1D-968E-408C-B4F4-FE96A34E7CB4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
